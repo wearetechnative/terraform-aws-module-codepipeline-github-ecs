@@ -23,7 +23,7 @@ data "aws_iam_policy_document" "codepipeline_role" {
 
     principals {
       type        = "Service"
-      identifiers = ["codepipeline.amazonaws.com","codebuild.amazonaws.com"]
+      identifiers = ["codepipeline.amazonaws.com", "codebuild.amazonaws.com"]
     }
 
     effect = "Allow"
@@ -113,7 +113,7 @@ data "aws_iam_policy_document" "codebuild" {
     ]
 
     resources = ["*"]
-    effect = "Allow"
+    effect    = "Allow"
   }
 }
 

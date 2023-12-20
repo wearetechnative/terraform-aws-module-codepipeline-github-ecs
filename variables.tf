@@ -10,7 +10,15 @@ variable "codepipeline_s3_arn" {
   type = string
 }
 
+variable "codepipeline_s3_kms" {
+  type = string
+}
+
 variable "codepipeline-cache_s3_bucket" {
+  type = string
+}
+
+variable "codepipeline-cache_s3_" {
   type = string
 }
 
@@ -61,6 +69,11 @@ variable "service_name" {
 variable "github_branch" {
   description = "Name of the Github branch"
   type        = string
+}
+
+variable "build_stage" {
+  description = "Name of the build-stage"
+  type        = list(string)
 }
 
 # variable "pipeline_name" {
