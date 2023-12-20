@@ -12,6 +12,12 @@ resource "aws_codebuild_project" "default" {
     type = "CODEPIPELINE"
   }
 
+  cache {
+    type = "S3"
+    # modes = ["LOCAL_DOCKER_LAYER_CACHE", "LOCAL_SOURCE_CACHE"]
+    location = var.codepipeline-cache_s3_bucket
+  }
+
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"
     image                       = "aws/codebuild/standard:7.0"
@@ -56,10 +62,8 @@ resource "aws_codebuild_project" "default" {
   }
 }
 
-####### WOUTER
-
 resource "aws_codepipeline" "codepipeline" {
-  name     = var.pipeline_name
+  name = var.pipeline_name
   # role_arn = module.pipeline_serviceroles.role_arn
   role_arn = aws_iam_role.codepipeline.arn
 
@@ -69,7 +73,7 @@ resource "aws_codepipeline" "codepipeline" {
     type     = "S3"
 
     encryption_key {
-      id   = "arn:aws:kms:us-east-2:221539347604:key/c2442fb9-8c82-428c-92e0-555dd1a2745a"
+      id = var.codepipeline_s3_kms
       type = "KMS"
     }
   }
@@ -87,28 +91,51 @@ resource "aws_codepipeline" "codepipeline" {
       namespace        = "SourceVariables"
 
       configuration = {
-        ConnectionArn    = var.codestar_connection_arn
-        FullRepositoryId = "${var.github_repo_owner}/${var.github_repo_name}"
-        BranchName       = var.github_branch
+        ConnectionArn        = var.codestar_connection_arn
+        FullRepositoryId     = "${var.github_repo_owner}/${var.github_repo_name}"
+        BranchName           = var.github_branch
         OutputArtifactFormat = "CODE_ZIP"
       }
     }
   }
 
-  stage {
-    name = "Build"
+  # stage {
+  #   name = "Build"
 
-    action {
-      name             = "Build"
-      category         = "Build"
-      owner            = "AWS"
-      provider         = "CodeBuild"
-      input_artifacts  = ["SourceArtifact"]
-      output_artifacts = ["BuildOutput"]
-      version          = "1"
+  #   action {
+  #     name             = "Build"
+  #     category         = "Build"
+  #     owner            = "AWS"
+  #     provider         = "CodeBuild"
+  #     input_artifacts  = ["SourceArtifact"]
+  #     output_artifacts = ["BuildOutput"]
+  #     version          = "1"
 
-      configuration = {
-        ProjectName = "${var.pipeline_name}-Project" #"test"
+  #     configuration = {
+  #       ProjectName = "${var.pipeline_name}-Project" #"test"
+  #     }
+  #   }
+  # }
+
+
+  dynamic "stage" {
+    for_each = var.build_stage
+
+    content {
+      name = stage.value.build_stage_name
+
+      action {
+        name             = "${stage.value.build_stage_name}"
+        category         = "Build"
+        owner            = "AWS"
+        provider         = "CodeBuild"
+        input_artifacts  = ["SourceArtifact"]
+        output_artifacts = ["${stage.value.name}Output"]
+        version          = "1"
+
+        configuration = {
+          ProjectName = stage.value.project_name
+        }
       }
     }
   }
