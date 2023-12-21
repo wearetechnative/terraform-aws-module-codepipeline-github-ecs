@@ -12,12 +12,6 @@ resource "aws_codebuild_project" "default" {
     type = "CODEPIPELINE"
   }
 
-  cache {
-    type = "S3"
-    # modes = ["LOCAL_DOCKER_LAYER_CACHE", "LOCAL_SOURCE_CACHE"]
-    location = var.codepipeline-cache_s3_bucket
-  }
-
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"
     image                       = "aws/codebuild/standard:7.0"
@@ -30,6 +24,12 @@ resource "aws_codebuild_project" "default" {
     }
 
     environment_variable {
+      name  = "PIPELINE_ENV"
+      value = var.environment
+    }
+
+    environment_variable {
+
       name  = "AWS_ACCOUNT_ID"
       value = data.aws_caller_identity.this_session.account_id
     }
@@ -62,8 +62,10 @@ resource "aws_codebuild_project" "default" {
   }
 }
 
+####### WOUTER
+
 resource "aws_codepipeline" "codepipeline" {
-  name = var.pipeline_name
+  name     = var.pipeline_name
   # role_arn = module.pipeline_serviceroles.role_arn
   role_arn = aws_iam_role.codepipeline.arn
 
@@ -72,10 +74,10 @@ resource "aws_codepipeline" "codepipeline" {
     location = var.codepipeline_s3_bucket
     type     = "S3"
 
-    encryption_key {
-      id = var.codepipeline_s3_kms
-      type = "KMS"
-    }
+    # encryption_key {
+    #   id   = "aws/s3"
+    #   type = "KMS"
+    # }
   }
 
   stage {
@@ -91,9 +93,9 @@ resource "aws_codepipeline" "codepipeline" {
       namespace        = "SourceVariables"
 
       configuration = {
-        ConnectionArn        = var.codestar_connection_arn
-        FullRepositoryId     = "${var.github_repo_owner}/${var.github_repo_name}"
-        BranchName           = var.github_branch
+        ConnectionArn    = var.codestar_connection_arn
+        FullRepositoryId = "${var.github_repo_owner}/${var.github_repo_name}"
+        BranchName       = var.github_branch
         OutputArtifactFormat = "CODE_ZIP"
       }
     }
