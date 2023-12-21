@@ -2,6 +2,9 @@ variable "pipeline_name" {
   type = string
 }
 
+variable "environment" {
+}
+
 variable "codepipeline_s3_bucket" {
   type = string
 }
@@ -15,10 +18,6 @@ variable "codepipeline_s3_kms" {
 }
 
 variable "codepipeline-cache_s3_bucket" {
-  type = string
-}
-
-variable "codepipeline-cache_s3_" {
   type = string
 }
 
@@ -71,10 +70,9 @@ variable "github_branch" {
   type        = string
 }
 
-variable "build_stage" {
-  description = "Name of the build-stage"
-  type        = list(string)
-}
+# variable "bucket_kms_master_key_id" {
+#   type = string
+# }
 
 # variable "pipeline_name" {
 #   description = "Name of the pipeline"
