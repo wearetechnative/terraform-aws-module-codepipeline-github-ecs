@@ -70,6 +70,19 @@ variable "github_branch" {
   type        = string
 }
 
+variable "build_stage_enabled" {
+  type        = bool
+  description = "Enable/disable the build stage"
+  default     = true
+}
+
+variable "push_to_ecr" {
+  type        = bool
+  description = "Push code to ECR"
+  default     = true
+}
+
+
 # variable "bucket_kms_master_key_id" {
 #   type = string
 # }
