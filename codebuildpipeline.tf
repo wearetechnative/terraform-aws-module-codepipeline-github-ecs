@@ -12,6 +12,11 @@ resource "aws_codebuild_project" "default" {
     type = "CODEPIPELINE"
   }
 
+  cache {
+    type  = "S3"
+    location = var.codepipeline-cache_s3_bucket
+  }
+
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"
     image                       = "aws/codebuild/standard:7.0"
@@ -22,6 +27,8 @@ resource "aws_codebuild_project" "default" {
       name  = "AWS_REGION"
       value = data.aws_region.codepipeline.name
     }
+
+
 
     environment_variable {
       name  = "PIPELINE_ENV"
@@ -37,7 +44,7 @@ resource "aws_codebuild_project" "default" {
 
   source {
     type      = "CODEPIPELINE"
-    buildspec = file(var.buildspec)
+    buildspec = var.buildspec
     # location            = local.github_source_location
     # report_build_status = "true"
     git_clone_depth = 0
@@ -119,24 +126,28 @@ resource "aws_codepipeline" "codepipeline" {
     }
   }
 
-  stage {
-    name = "Deploy"
 
-    action {
-      name            = "Deploy"
-      category        = "Deploy"
-      owner           = "AWS"
-      provider        = "ECS"
-      input_artifacts = ["BuildOutput"]
-      version         = "1"
+  dynamic "stage" {
 
-      configuration = {
-        ClusterName = var.ecs_cluster_name
-        ServiceName = var.service_name
-        FileName    = "/tmp/imagedefinitions.json"
+    for_each = var.build_stage_enabled ? [1] : []
+      content {
 
-      }
-    }
+        name = "Deploy"
+
+          action {
+            name            = "Deploy"
+            category        = "Deploy"
+            owner           = "AWS"
+            provider        = "ECS"
+            input_artifacts = ["BuildOutput"]
+            version         = "1"
+            configuration = {
+              ClusterName = var.ecs_cluster_name
+              ServiceName = var.service_name
+              FileName    = "/tmp/imagedefinitions.json"
+            }
+          }
+        }
   }
 }
 
