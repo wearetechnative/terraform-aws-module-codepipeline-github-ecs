@@ -82,6 +82,10 @@ variable "push_to_ecr" {
   default     = true
 }
 
+variable "account" {
+
+}
+
 
 # variable "bucket_kms_master_key_id" {
 #   type = string

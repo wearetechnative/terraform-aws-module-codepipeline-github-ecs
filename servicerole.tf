@@ -110,6 +110,7 @@ data "aws_iam_policy_document" "codebuild" {
       "codebuild:*",
       "logs:*",
       "cloudwatch:*",
+      "ecr:*"
     ]
 
     resources = ["*"]

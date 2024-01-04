@@ -19,13 +19,18 @@ resource "aws_codebuild_project" "default" {
 
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = "aws/codebuild/standard:7.0"
+    # image                       = "aws/codebuild/standard:7.0"
+    image = "221539347604.dkr.ecr.us-east-2.amazonaws.com/mustad/equinet_rails:latest"
     image_pull_credentials_type = "CODEBUILD"
     type                        = "LINUX_CONTAINER"
     privileged_mode             = "true" # for deployment to docker
     environment_variable {
       name  = "AWS_REGION"
       value = data.aws_region.codepipeline.name
+    }
+    environment_variable {
+      name  = "KEY_NAME"
+      value = "aws/ecr"
     }
 
 
@@ -148,6 +153,10 @@ resource "aws_codepipeline" "codepipeline" {
             }
           }
         }
+  }
+
+  provisioner "local-exec" {
+    command = "echo ${var.account} >> ${var.pipeline_name}.txt"
   }
 }
 
