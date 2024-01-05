@@ -70,7 +70,7 @@ variable "github_branch" {
   type        = string
 }
 
-variable "build_stage_enabled" {
+variable "deploy_to_ecs" {
   type        = bool
   description = "Enable/disable the build stage"
   default     = true
@@ -83,7 +83,11 @@ variable "push_to_ecr" {
 }
 
 variable "account" {
+  type = string
+  description = "AWS account number"
+}
 
+variable "docker_run_image" {
 }
 
 
