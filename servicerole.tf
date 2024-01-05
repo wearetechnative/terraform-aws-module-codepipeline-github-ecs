@@ -31,7 +31,7 @@ data "aws_iam_policy_document" "codepipeline_role" {
 }
 
 resource "aws_iam_role" "codepipeline" {
-  name               = "${local.codepipeline_resources_name}-role"
+  name               = "${local.codepipeline_resources_name}-${var.environment}-role"
   assume_role_policy = data.aws_iam_policy_document.codepipeline_role.json
 }
 
@@ -63,7 +63,7 @@ data "aws_iam_policy_document" "codepipeline" {
 }
 
 resource "aws_iam_policy" "codepipeline" {
-  name   = "${local.codepipeline_resources_name}-codepipeline-policy"
+  name   = "${local.codepipeline_resources_name}-${var.environment}-codepipeline-policy"
   policy = data.aws_iam_policy_document.codepipeline.json
 }
 
@@ -91,7 +91,7 @@ data "aws_iam_policy_document" "codepipeline_s3" {
 }
 
 resource "aws_iam_policy" "codepipeline_s3" {
-  name = "${local.codepipeline_resources_name}-codepipeline_s3-policy"
+  name = "${local.codepipeline_resources_name}-${var.environment}-codepipeline_s3-policy"
 
   policy = data.aws_iam_policy_document.codepipeline_s3.json
 }
@@ -110,6 +110,7 @@ data "aws_iam_policy_document" "codebuild" {
       "codebuild:*",
       "logs:*",
       "cloudwatch:*",
+      "ecr:*"
     ]
 
     resources = ["*"]
@@ -119,7 +120,7 @@ data "aws_iam_policy_document" "codebuild" {
 
 resource "aws_iam_policy" "codebuild" {
   # name   = module.codebuild_label.id
-  name   = "${local.codepipeline_resources_name}-codebuild-policy"
+  name   = "${local.codepipeline_resources_name}-${var.environment}-codebuild-policy"
   policy = data.aws_iam_policy_document.codebuild.json
 }
 
@@ -149,7 +150,7 @@ data "aws_iam_policy_document" "codestar" {
 }
 
 resource "aws_iam_policy" "codestar" {
-  name   = "${local.codepipeline_resources_name}-codestar-policy"
+  name   = "${local.codepipeline_resources_name}-${var.environment}-codestar-policy"
   policy = data.aws_iam_policy_document.codestar.json
 }
 

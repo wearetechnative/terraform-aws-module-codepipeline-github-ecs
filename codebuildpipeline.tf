@@ -19,13 +19,19 @@ resource "aws_codebuild_project" "default" {
 
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = "aws/codebuild/standard:7.0"
+    # image                       = "aws/codebuild/standard:7.0"
+    # image = "221539347604.dkr.ecr.us-east-2.amazonaws.com/mustad/equinet_rails_dev:latest"
+    image = var.docker_run_image
     image_pull_credentials_type = "CODEBUILD"
     type                        = "LINUX_CONTAINER"
     privileged_mode             = "true" # for deployment to docker
     environment_variable {
       name  = "AWS_REGION"
       value = data.aws_region.codepipeline.name
+    }
+    environment_variable {
+      name  = "KEY_NAME"
+      value = "aws/ecr"
     }
 
 
@@ -87,6 +93,7 @@ resource "aws_codepipeline" "codepipeline" {
     # }
   }
 
+
   stage {
     name = "Source"
 
@@ -123,13 +130,14 @@ resource "aws_codepipeline" "codepipeline" {
       configuration = {
         ProjectName = "${var.pipeline_name}-Project" #"test"
       }
+
     }
   }
 
 
   dynamic "stage" {
 
-    for_each = var.build_stage_enabled ? [1] : []
+    for_each = var.deploy_to_ecs ? [1] : []
       content {
 
         name = "Deploy"
@@ -149,6 +157,7 @@ resource "aws_codepipeline" "codepipeline" {
           }
         }
   }
+
 }
 
 resource "aws_cloudwatch_log_group" "codepipeline_project" {
