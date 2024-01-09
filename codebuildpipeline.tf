@@ -18,7 +18,7 @@ resource "aws_codebuild_project" "default" {
   }
 
   environment {
-    compute_type                = "BUILD_GENERAL1_SMALL"
+    compute_type                = "BUILD_GENERAL1_LARGE"
     # image                       = "aws/codebuild/standard:7.0"
     # image = "221539347604.dkr.ecr.us-east-2.amazonaws.com/mustad/equinet_rails_dev:latest"
     image = var.docker_run_image
@@ -34,6 +34,10 @@ resource "aws_codebuild_project" "default" {
       value = "aws/ecr"
     }
 
+    environment_variable {
+      name  = "APP_ENV"
+      value = var.environment
+    }
 
 
     environment_variable {
