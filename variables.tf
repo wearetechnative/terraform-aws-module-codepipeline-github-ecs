@@ -83,11 +83,17 @@ variable "push_to_ecr" {
 }
 
 variable "account" {
-  type = string
+  type        = string
   description = "AWS account number"
 }
 
 variable "docker_run_image" {
+}
+
+variable "pipeline_type" {
+  type=string
+  description = "pipeline_type, V1 or V2"
+  default = "V1"
 }
 
 

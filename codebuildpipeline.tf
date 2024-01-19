@@ -85,6 +85,7 @@ resource "aws_codepipeline" "codepipeline" {
   name     = var.pipeline_name
   # role_arn = module.pipeline_serviceroles.role_arn
   role_arn = aws_iam_role.codepipeline.arn
+  pipeline_type = var.pipeline_type
 
   artifact_store {
     # location = data.terraform_remote_state.shared_services.outputs.s3-codepipeline_bucket #module.pipeline_serviceroles.bucket
