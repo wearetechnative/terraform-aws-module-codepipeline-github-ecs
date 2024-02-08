@@ -1,116 +1,60 @@
-variable "pipeline_name" {
+variable "app_name" {
   type = string
 }
 
-variable "environment" {
+variable "pipelines" {
+  type = map(object({
+    enabled                      = bool
+    codepipeline_s3_kms          = string
+    codepipeline-cache_s3_bucket = string
+    codepipeline_s3_arn          = string
+    codepipeline_s3_bucket       = string
+    vpc_id                       = string
+    subnet_ids                   = string
+    security_group_ids           = string
+    codestar_connection_arn      = string
+    pipeline_type                = string
+    pipeline_name                = string
+    github_repo_name             = string
+    github_branch                = string
+    environment                  = string
+    buildspec                    = string
+    ecs_cluster_name             = string
+    service_name                 = string
+    deploy_to_ecs                = bool
+    account                      = string
+    docker_run_image             = string
+  }))
 }
 
-variable "codepipeline_s3_bucket" {
+variable "var_c" {
   type = string
 }
 
-variable "codepipeline_s3_arn" {
-  type = string
-}
 
-variable "codepipeline_s3_kms" {
-  type = string
-}
-
-variable "codepipeline-cache_s3_bucket" {
-  type = string
-}
-
-variable "codepipeline-cache_s3_arn" {
-  type = string
-}
-
-variable "github_repo_owner" {
-  type = string
-}
-
-variable "github_repo_name" {
-  type = string
-}
-
-variable "codestar_connection_arn" {
-  type = string
-}
-
-variable "buildspec" {
-  description = "Name of the file where buildspecs are defined"
-  type        = string
-  default     = "buildspecs/buildspec.yml"
-}
-
-variable "vpc_id" {
-  description = "Account VPC"
-  type        = string
-}
-
-variable "subnet_ids" {
-  description = "Account subnets"
-  type        = list(string)
-}
-
-variable "security_group_ids" {
-  description = "AWS Security Group"
-  type        = list(string)
-}
-
-variable "ecs_cluster_name" {
-  description = "Name of the ECS cluster to deploy to"
-}
-
-variable "service_name" {
-  description = "Name of the service/application in the ECS cluster"
-}
-variable "github_branch" {
-  description = "Name of the Github branch"
-  type        = string
-}
-
-variable "deploy_to_ecs" {
-  type        = bool
-  description = "Enable/disable the build stage"
-  default     = true
-}
-
-variable "push_to_ecr" {
-  type        = bool
-  description = "Push code to ECR"
-  default     = true
-}
-
-variable "account" {
-  type        = string
-  description = "AWS account number"
-}
-
-variable "docker_run_image" {
-}
-
-variable "pipeline_type" {
-  type=string
-  description = "pipeline_type, V1 or V2"
-  default = "V1"
-}
+# github_repo_owner            = each.value.github_repo_owner
+#   codepipeline_s3_kms          = "alias/aws/s3"
+#   codepipeline-cache_s3_arn    = data.terraform_remote_state.shared_services.outputs.s3-codepipeline-cache_arn
+#   codepipeline-cache_s3_bucket = data.terraform_remote_state.shared_services.outputs.s3-codepipeline-cache_bucket
+#   codepipeline_s3_arn          = data.terraform_remote_state.shared_services.outputs.s3-codepipeline_arn
+#   codepipeline_s3_bucket       = data.terraform_remote_state.shared_services.outputs.s3-codepipeline_bucket
+#   vpc_id                       = data.aws_vpc.vpc.id
+#   subnet_ids                   = [data.aws_subnet.privsubnet1.id, data.aws_subnet.privsubnet2.id]
+#   security_group_ids           = [aws_security_group.codepipeline.id]
+#   codestar_connection_arn      = each.value.codestar_connection_arn
+#   pipeline_type                = "V2"
 
 
-# variable "bucket_kms_master_key_id" {
-#   type = string
-# }
 
-# variable "pipeline_name" {
-#   description = "Name of the pipeline"
-#   type        = string
-# }
-
-# variable "codepipeline_s3_arn" {
-# }
-
-# variable "codepipeline-cache_s3_bucket=var.codepipelince-cache-s3_bucket" {
-# }
-
-# variable "codepipeline-cache_s3_arn=var.codepipeline-cache_s3_arn" {
-# }
+#   ## APP Environments dependent variables
+#   for_each         = var.app_environments
+#   pipeline_name    = "${each.key}-equinet-be-pipeline"
+#   github_repo_name = each.value.github_repo_name
+#   github_branch    = each.value.github_branch
+#   environment      = each.key
+#   buildspec        = contains(local.equinet-be_buildspec_local_environments, each.key) ? file("buildspecs/buildspec-${each.key}-${local.equinet-be_buildspec_filename_suffix}") : "buildspecs/buildspec-${each.key}-${local.equinet-be_buildspec_filename_suffix}"
+#   ecs_cluster_name = "Equinet-Backend-${each.key}"
+#   service_name     = "equinet_app_${each.key}"
+#   deploy_to_ecs    = contains(local.equinet-be_no_deploy_to_ecs_environments, each.key) ? "false" : "true"
+#   account          = var.account
+#   docker_run_image = each.value.docker_run_image
