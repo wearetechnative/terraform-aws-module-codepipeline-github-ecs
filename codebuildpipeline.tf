@@ -3,9 +3,9 @@ resource "aws_codebuild_project" "default" {
     for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
   }
   name                   = "${each.key}-Project"
-  description            = "Codebuild project for ${each.key.pipeline_name}"
+  description            = "Codebuild project for ${each.key} - ${each.value.pipeline_name}"
   concurrent_build_limit = "1"
-  service_role           = aws_iam_role.codepipeline.arn
+  service_role           = aws_iam_role.codepipeline[each.key].arn
   build_timeout          = 30
   # badge_enabled          = var.badge_enabled
   # source_version         = var.source_version != "" ? var.source_version : null
@@ -83,9 +83,12 @@ resource "aws_codebuild_project" "default" {
 }
 
 resource "aws_codepipeline" "codepipeline" {
+    for_each = {
+    for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
+  }
   name     = each.key
   # role_arn = module.pipeline_serviceroles.role_arn
-  role_arn = aws_iam_role.codepipeline.arn
+  role_arn = aws_iam_role.codepipeline[each.key].arn
   pipeline_type = each.value.pipeline_type #var.pipeline_type
 
   artifact_store {
@@ -165,5 +168,8 @@ resource "aws_codepipeline" "codepipeline" {
 }
 
 resource "aws_cloudwatch_log_group" "codepipeline_project" {
+    for_each = {
+    for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
+  }
   name = "codepipeline-${each.value.pipeline_name}-Logs"
 }

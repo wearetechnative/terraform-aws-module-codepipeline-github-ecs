@@ -13,7 +13,7 @@ data "aws_region" "codepipeline" {
 #     for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
 #   }
 #   account_id                  = data.aws_caller_identity.this_session.account_id
-#   codepipeline_resources_name = "codepipeline-${each.key.pipeline_name}"
+#   codepipeline_resources_name = "codepipeline-${each.value.pipeline_name}"
 # }
 
 data "aws_iam_policy_document" "codepipeline_role" {
@@ -38,7 +38,7 @@ resource "aws_iam_role" "codepipeline" {
     for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
   }
   # name               = "${local.codepipeline_resources_name}-${var.environment}-role"
-  name               = "codepipeline-${each.key.pipeline_name}-role"
+  name               = "codepipeline-${each.key}-${each.value.environment}-role"
   assume_role_policy = data.aws_iam_policy_document.codepipeline_role.json
 }
 
@@ -74,16 +74,22 @@ resource "aws_iam_policy" "codepipeline" {
     for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
   }
 
-  name   = "codepipeline-${each.key.pipeline_name}-${each.value.environment}-codepipeline-policy"
+  name   = "codepipeline-${each.value.pipeline_name}-${each.value.environment}-codepipeline-policy"
   policy = data.aws_iam_policy_document.codepipeline.json
 }
 
 resource "aws_iam_role_policy_attachment" "codepipeline" {
-  role       = aws_iam_role.codepipeline.id
-  policy_arn = aws_iam_policy.codepipeline.arn
+   for_each = {
+    for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
+  }
+  role       = aws_iam_role.codepipeline[each.key].id
+  policy_arn = aws_iam_policy.codepipeline[each.key].arn
 }
 
 data "aws_iam_policy_document" "codepipeline_s3" {
+  for_each = {
+    for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
+  }
 
   statement {
     sid = ""
@@ -102,15 +108,21 @@ data "aws_iam_policy_document" "codepipeline_s3" {
 }
 
 resource "aws_iam_policy" "codepipeline_s3" {
-  name = "codepipeline-${each.key.pipeline_name}-${each.value.environment}-codepipeline_s3-policy"
+  for_each = {
+    for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
+  }
+  name = "codepipeline-${each.value.pipeline_name}-${each.value.environment}-codepipeline_s3-policy"
 
-  policy = data.aws_iam_policy_document.codepipeline_s3.json
+  policy = data.aws_iam_policy_document.codepipeline_s3[each.key].json
 }
 
 
 resource "aws_iam_role_policy_attachment" "s3" {
-  role       = aws_iam_role.codepipeline.id
-  policy_arn = aws_iam_policy.codepipeline_s3.arn
+   for_each = {
+    for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
+  }
+  role       = aws_iam_role.codepipeline[each.key].id
+  policy_arn = aws_iam_policy.codepipeline_s3[each.key].arn
 }
 
 data "aws_iam_policy_document" "codebuild" {
@@ -130,17 +142,26 @@ data "aws_iam_policy_document" "codebuild" {
 }
 
 resource "aws_iam_policy" "codebuild" {
+  for_each = {
+    for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
+  }
   # name   = module.codebuild_label.id
-  name   = "codepipeline-${each.key.pipeline_name}-${each.value.environment}-codebuild-policy"
-  policy = data.aws_iam_policy_document.codebuild.json
+  name   = "codepipeline-${each.value.pipeline_name}-${each.value.environment}-codebuild-policy"
+  policy = data.aws_iam_policy_document.codebuild[each.key].json
 }
 
 resource "aws_iam_role_policy_attachment" "codebuild" {
-  role       = aws_iam_role.codepipeline.id
-  policy_arn = aws_iam_policy.codebuild.arn
+   for_each = {
+    for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
+  }
+  role       = aws_iam_role.codepipeline[each.key].id
+  policy_arn = aws_iam_policy.codebuild[each.key].arn
 }
 
 data "aws_iam_policy_document" "codestar" {
+  for_each = {
+    for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
+  }
   statement {
     sid = ""
 
@@ -162,11 +183,17 @@ data "aws_iam_policy_document" "codestar" {
 }
 
 resource "aws_iam_policy" "codestar" {
-  name   = "codepipeline-${each.key.pipeline_name}-${each.value.environment}-codestar-policy"
-  policy = data.aws_iam_policy_document.codestar.json
+  for_each = {
+    for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
+  }
+  name   = "codepipeline-${each.value.pipeline_name}-${each.value.environment}-codestar-policy"
+  policy = data.aws_iam_policy_document.codestar[each.key].json
 }
 
 resource "aws_iam_role_policy_attachment" "codestar" {
-  role       = aws_iam_role.codepipeline.id
-  policy_arn = aws_iam_policy.codestar.arn
+  for_each = {
+    for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
+  }
+  role       = aws_iam_role.codepipeline[each.key].id
+  policy_arn = aws_iam_policy.codestar[each.key].arn
 }
