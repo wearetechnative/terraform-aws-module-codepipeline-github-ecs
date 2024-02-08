@@ -17,7 +17,7 @@ resource "aws_codebuild_project" "default" {
 
   cache {
     type  = "S3"
-    location = each.value.codepipeline-cache_s3_bucket
+    location = var.codepipeline-cache_s3_bucket
 
   }
 
@@ -68,9 +68,9 @@ resource "aws_codebuild_project" "default" {
   }
 
   vpc_config {
-    vpc_id             = each.value.vpc_id      # var.vpc_id
-    subnets            = each.value.subnet_ids  # var.subnet_ids
-    security_group_ids = each.value.security_group_ids #var.security_group_ids
+    vpc_id             = var.vpc_id     # var.vpc_id
+    subnets            = var.subnet_ids  # var.subnet_ids
+    security_group_ids = var.security_group_ids #var.security_group_ids
   }
 
   logs_config {
@@ -93,7 +93,7 @@ resource "aws_codepipeline" "codepipeline" {
 
   artifact_store {
     # location = data.terraform_remote_state.shared_services.outputs.s3-codepipeline_bucket #module.pipeline_serviceroles.bucket
-    location = each.value.codepipeline_s3_bucket #var.codepipeline_s3_bucket
+    location = var.codepipeline-cache_s3_bucket #var.codepipeline_s3_bucket
     type     = "S3"
 
     # encryption_key {
@@ -171,5 +171,5 @@ resource "aws_cloudwatch_log_group" "codepipeline_project" {
     for_each = {
     for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
   }
-  name = "codepipeline-${each.value.pipeline_name}-Logs"
+  name = "codepipeline-${each.key}-${each.value.pipeline_name}-Logs"
 }

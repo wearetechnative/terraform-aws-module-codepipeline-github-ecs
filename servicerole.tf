@@ -74,7 +74,7 @@ resource "aws_iam_policy" "codepipeline" {
     for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
   }
 
-  name   = "codepipeline-${each.value.pipeline_name}-${each.value.environment}-codepipeline-policy"
+  name   = "codepipeline-${each.key}-${each.value.pipeline_name}-${each.value.environment}-codepipeline-policy"
   policy = data.aws_iam_policy_document.codepipeline.json
 }
 
@@ -99,8 +99,8 @@ data "aws_iam_policy_document" "codepipeline_s3" {
     ]
 
     resources = [
-      each.value.codepipeline_s3_arn,
-      "${each.value.codepipeline_s3_arn}/*"
+      var.codepipeline_s3_arn,
+      "${var.codepipeline_s3_arn}/*"
     ]
 
     effect = "Allow"
@@ -111,7 +111,7 @@ resource "aws_iam_policy" "codepipeline_s3" {
   for_each = {
     for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
   }
-  name = "codepipeline-${each.value.pipeline_name}-${each.value.environment}-codepipeline_s3-policy"
+  name = "codepipeline-${each.key}-${each.value.pipeline_name}-${each.value.environment}-codepipeline_s3-policy"
 
   policy = data.aws_iam_policy_document.codepipeline_s3[each.key].json
 }
@@ -146,8 +146,8 @@ resource "aws_iam_policy" "codebuild" {
     for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
   }
   # name   = module.codebuild_label.id
-  name   = "codepipeline-${each.value.pipeline_name}-${each.value.environment}-codebuild-policy"
-  policy = data.aws_iam_policy_document.codebuild[each.key].json
+  name   = "codepipeline-${each.key}-${each.value.pipeline_name}-${each.value.environment}-codebuild-policy"
+  policy = data.aws_iam_policy_document.codebuild.json
 }
 
 resource "aws_iam_role_policy_attachment" "codebuild" {
@@ -176,7 +176,7 @@ data "aws_iam_policy_document" "codestar" {
       values = ["${each.value.github_repo_owner}/${each.value.github_repo_name}"]
     }
 
-    resources = each.value.codestar_connection_arn
+    resources = [each.value.codestar_connection_arn]
     effect    = "Allow"
 
   }
@@ -186,7 +186,7 @@ resource "aws_iam_policy" "codestar" {
   for_each = {
     for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
   }
-  name   = "codepipeline-${each.value.pipeline_name}-${each.value.environment}-codestar-policy"
+  name   = "codepipeline-${each.key}-${each.value.pipeline_name}-${each.value.environment}-codestar-policy"
   policy = data.aws_iam_policy_document.codestar[each.key].json
 }
 

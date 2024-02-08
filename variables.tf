@@ -6,17 +6,18 @@ variable "pipelines" {
   type = map(object({
     enabled                      = bool
     codepipeline_s3_kms          = string
-    codepipeline-cache_s3_bucket = string
-    codepipeline_s3_arn          = string
-    codepipeline_s3_bucket       = string
-    vpc_id                       = string
-    subnet_ids                   = string
-    security_group_ids           = string
+    # codepipeline-cache_s3_bucket = string
+    # codepipeline_s3_arn          = string
+    # codepipeline_s3_bucket       = string
+    # vpc_id                       = string
+    # subnet_ids                   = string
+    # security_group_ids           = string
     codestar_connection_arn      = string
     pipeline_type                = string
     pipeline_name                = string
     github_repo_name             = string
     github_branch                = string
+    github_repo_owner            = string
     environment                  = string
     buildspec                    = string
     ecs_cluster_name             = string
@@ -58,3 +59,26 @@ variable "var_c" {
 #   deploy_to_ecs    = contains(local.equinet-be_no_deploy_to_ecs_environments, each.key) ? "false" : "true"
 #   account          = var.account
 #   docker_run_image = each.value.docker_run_image
+
+  variable "codepipeline-cache_s3_arn" {
+    type = string
+  }
+  variable "codepipeline-cache_s3_bucket" {
+    type = string
+  }
+  variable "codepipeline_s3_arn" {
+    type = string
+  }
+  variable "codepipeline_s3_bucket" {
+    type = string
+  }
+  variable "security_group_ids" {
+    type = list(string)
+  }
+  variable "subnet_ids" {
+    type = list(string)
+  }
+
+  variable "vpc_id" {
+    type = string
+  }
