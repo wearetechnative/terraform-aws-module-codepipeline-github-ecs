@@ -8,10 +8,13 @@ data "aws_caller_identity" "this_session" {
 data "aws_region" "codepipeline" {
 }
 
-locals {
-  account_id                  = data.aws_caller_identity.this_session.account_id
-  codepipeline_resources_name = "codepipeline-${var.pipeline_name}"
-}
+# locals {
+#   for_each = {
+#     for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
+#   }
+#   account_id                  = data.aws_caller_identity.this_session.account_id
+#   codepipeline_resources_name = "codepipeline-${each.key.pipeline_name}"
+# }
 
 data "aws_iam_policy_document" "codepipeline_role" {
   statement {
@@ -31,7 +34,11 @@ data "aws_iam_policy_document" "codepipeline_role" {
 }
 
 resource "aws_iam_role" "codepipeline" {
-  name               = "${local.codepipeline_resources_name}-${var.environment}-role"
+  for_each = {
+    for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
+  }
+  # name               = "${local.codepipeline_resources_name}-${var.environment}-role"
+  name               = "codepipeline-${each.key.pipeline_name}-role"
   assume_role_policy = data.aws_iam_policy_document.codepipeline_role.json
 }
 
@@ -63,7 +70,11 @@ data "aws_iam_policy_document" "codepipeline" {
 }
 
 resource "aws_iam_policy" "codepipeline" {
-  name   = "${local.codepipeline_resources_name}-${var.environment}-codepipeline-policy"
+  for_each = {
+    for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
+  }
+
+  name   = "codepipeline-${each.key.pipeline_name}-${each.value.environment}-codepipeline-policy"
   policy = data.aws_iam_policy_document.codepipeline.json
 }
 
@@ -82,8 +93,8 @@ data "aws_iam_policy_document" "codepipeline_s3" {
     ]
 
     resources = [
-      var.codepipeline_s3_arn,
-      "${var.codepipeline_s3_arn}/*"
+      each.value.codepipeline_s3_arn,
+      "${each.value.codepipeline_s3_arn}/*"
     ]
 
     effect = "Allow"
@@ -91,7 +102,7 @@ data "aws_iam_policy_document" "codepipeline_s3" {
 }
 
 resource "aws_iam_policy" "codepipeline_s3" {
-  name = "${local.codepipeline_resources_name}-${var.environment}-codepipeline_s3-policy"
+  name = "codepipeline-${each.key.pipeline_name}-${each.value.environment}-codepipeline_s3-policy"
 
   policy = data.aws_iam_policy_document.codepipeline_s3.json
 }
@@ -120,7 +131,7 @@ data "aws_iam_policy_document" "codebuild" {
 
 resource "aws_iam_policy" "codebuild" {
   # name   = module.codebuild_label.id
-  name   = "${local.codepipeline_resources_name}-${var.environment}-codebuild-policy"
+  name   = "codepipeline-${each.key.pipeline_name}-${each.value.environment}-codebuild-policy"
   policy = data.aws_iam_policy_document.codebuild.json
 }
 
@@ -140,17 +151,18 @@ data "aws_iam_policy_document" "codestar" {
     condition {
       test     = "ForAllValues:StringEquals"
       variable = "codestar-connections:FullRepositoryId"
-      values   = ["${var.github_repo_owner}/${var.github_repo_name}"]
+      # values   = ["${var.github_repo_owner}/${var.github_repo_name}"]
+      values = ["${each.value.github_repo_owner}/${each.value.github_repo_name}"]
     }
 
-    resources = [var.codestar_connection_arn]
+    resources = each.value.codestar_connection_arn
     effect    = "Allow"
 
   }
 }
 
 resource "aws_iam_policy" "codestar" {
-  name   = "${local.codepipeline_resources_name}-${var.environment}-codestar-policy"
+  name   = "codepipeline-${each.key.pipeline_name}-${each.value.environment}-codestar-policy"
   policy = data.aws_iam_policy_document.codestar.json
 }
 

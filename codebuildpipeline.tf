@@ -1,6 +1,9 @@
 resource "aws_codebuild_project" "default" {
-  name                   = "${var.pipeline_name}-Project"
-  description            = "Codebuild project for ${var.pipeline_name}"
+  for_each = {
+    for pipeline_name, pipeline_config in var.pipelines : "${var.app_name}-${pipeline_name}" => pipeline_config if pipeline_config.enabled
+  }
+  name                   = "${each.key}-Project"
+  description            = "Codebuild project for ${each.key.pipeline_name}"
   concurrent_build_limit = "1"
   service_role           = aws_iam_role.codepipeline.arn
   build_timeout          = 30
@@ -14,14 +17,15 @@ resource "aws_codebuild_project" "default" {
 
   cache {
     type  = "S3"
-    location = var.codepipeline-cache_s3_bucket
+    location = each.value.codepipeline-cache_s3_bucket
+
   }
 
   environment {
     compute_type                = "BUILD_GENERAL1_LARGE"
     # image                       = "aws/codebuild/standard:7.0"
     # image = "221539347604.dkr.ecr.us-east-2.amazonaws.com/mustad/equinet_rails_dev:latest"
-    image = var.docker_run_image
+    image = each.value.docker_run_image  #var.docker_run_image
     image_pull_credentials_type = "CODEBUILD"
     type                        = "LINUX_CONTAINER"
     privileged_mode             = "true" # for deployment to docker
@@ -36,13 +40,12 @@ resource "aws_codebuild_project" "default" {
 
     environment_variable {
       name  = "APP_ENV"
-      value = var.environment
+      value = each.value.environment
     }
-
 
     environment_variable {
       name  = "PIPELINE_ENV"
-      value = var.environment
+      value = var.app_name   #var.environment
     }
 
     environment_variable {
@@ -54,7 +57,7 @@ resource "aws_codebuild_project" "default" {
 
   source {
     type      = "CODEPIPELINE"
-    buildspec = var.buildspec
+    buildspec = each.value.buildspec  #var.buildspec
     # location            = local.github_source_location
     # report_build_status = "true"
     git_clone_depth = 0
@@ -65,31 +68,29 @@ resource "aws_codebuild_project" "default" {
   }
 
   vpc_config {
-    vpc_id             = var.vpc_id
-    subnets            = var.subnet_ids
-    security_group_ids = var.security_group_ids
+    vpc_id             = each.value.vpc_id      # var.vpc_id
+    subnets            = each.value.subnet_ids  # var.subnet_ids
+    security_group_ids = each.value.security_group_ids #var.security_group_ids
   }
 
   logs_config {
     cloudwatch_logs {
-      group_name  = "codepipeline-${var.pipeline_name}-Logs"
+      group_name  = "codepipeline-${each.key}-Logs"
       status      = "ENABLED"
-      stream_name = "codepipeline-${var.pipeline_name}-Logs"
+      stream_name = "codepipeline-${each.key}-Logs"
     }
   }
 }
 
-####### WOUTER
-
 resource "aws_codepipeline" "codepipeline" {
-  name     = var.pipeline_name
+  name     = each.key
   # role_arn = module.pipeline_serviceroles.role_arn
   role_arn = aws_iam_role.codepipeline.arn
-  pipeline_type = var.pipeline_type
+  pipeline_type = each.value.pipeline_type #var.pipeline_type
 
   artifact_store {
     # location = data.terraform_remote_state.shared_services.outputs.s3-codepipeline_bucket #module.pipeline_serviceroles.bucket
-    location = var.codepipeline_s3_bucket
+    location = each.value.codepipeline_s3_bucket #var.codepipeline_s3_bucket
     type     = "S3"
 
     # encryption_key {
@@ -112,9 +113,9 @@ resource "aws_codepipeline" "codepipeline" {
       namespace        = "SourceVariables"
 
       configuration = {
-        ConnectionArn    = var.codestar_connection_arn
-        FullRepositoryId = "${var.github_repo_owner}/${var.github_repo_name}"
-        BranchName       = var.github_branch
+        ConnectionArn    = each.value.codestar_connection_arn  #var.codestar_connection_arn
+        FullRepositoryId = "${each.value.github_repo_owner}/${each.value.github_repo_name}"
+        BranchName       = each.value.github_branch #var.github_branch
         OutputArtifactFormat = "CODE_ZIP"
       }
     }
@@ -133,18 +134,15 @@ resource "aws_codepipeline" "codepipeline" {
       version          = "1"
 
       configuration = {
-        ProjectName = "${var.pipeline_name}-Project" #"test"
+        # ProjectName = "${var.pipeline_name}-Project" #"test"
+        ProjectName = "${each.value.pipeline_name}-Project"
       }
 
     }
   }
 
 
-  dynamic "stage" {
-
-    for_each = var.deploy_to_ecs ? [1] : []
-      content {
-
+      stage {
         name = "Deploy"
 
           action {
@@ -155,16 +153,17 @@ resource "aws_codepipeline" "codepipeline" {
             input_artifacts = ["BuildOutput"]
             version         = "1"
             configuration = {
-              ClusterName = var.ecs_cluster_name
-              ServiceName = var.service_name
+              # ClusterName = var.ecs_cluster_name
+              # ServiceName = var.service_name
+              ClusterName = "${each.value.ecs_cluster_name}"
+              ServiceName = "${each.value.service_name}" #var.service_name
               FileName    = "/tmp/imagedefinitions.json"
             }
-          }
         }
   }
 
 }
 
 resource "aws_cloudwatch_log_group" "codepipeline_project" {
-  name = "codepipeline-${var.pipeline_name}-Logs"
+  name = "codepipeline-${each.value.pipeline_name}-Logs"
 }
