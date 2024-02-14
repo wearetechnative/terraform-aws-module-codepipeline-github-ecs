@@ -139,29 +139,28 @@ resource "aws_codepipeline" "codepipeline" {
     }
   }
 
+ dynamic "stage" {
+  for_each = var.deploy_to_ecs != null ? keys(var.deploy_to_ecs.deployments) : []
+  content {
+    name = "Deploy-${stage.value}"
 
-  dynamic "stage" {
+    action {
+      name            = "Deploy"
+      category        = "Deploy"
+      owner           = "AWS"
+      provider        = "ECS"
+      input_artifacts = ["BuildOutput"]
+      version         = "1"
 
-    for_each = var.deploy_to_ecs ? [1] : []
-      content {
-
-        name = "Deploy"
-
-          action {
-            name            = "Deploy"
-            category        = "Deploy"
-            owner           = "AWS"
-            provider        = "ECS"
-            input_artifacts = ["BuildOutput"]
-            version         = "1"
-            configuration = {
-              ClusterName = var.ecs_cluster_name
-              ServiceName = var.service_name
-              FileName    = "/tmp/imagedefinitions.json"
-            }
-          }
-        }
+      configuration = {
+        ClusterName = var.deploy_to_ecs.deployments[stage.value].ClusterName
+        ServiceName = var.deploy_to_ecs.deployments[stage.value].ServiceName
+        FileName    = var.deploy_to_ecs.deployments[stage.value].FileName
+      }
+    }
   }
+}
+
 
 }
 

@@ -58,22 +58,42 @@ variable "security_group_ids" {
   type        = list(string)
 }
 
-variable "ecs_cluster_name" {
-  description = "Name of the ECS cluster to deploy to"
-}
+# variable "ecs_cluster_name" {
+#   description = "Name of the ECS cluster to deploy to"
+# }
 
-variable "service_name" {
-  description = "Name of the service/application in the ECS cluster"
-}
+# variable "service_name" {
+#   description = "Name of the service/application in the ECS cluster"
+# }
+
+# variable "deploy_to_ecs" {
+#   type = map(object({
+#     ClusterName = string
+#     ServiceName = string
+#     FileName    = string
+#   }))
+#   description = "Map of ECS deployment configurations"
+# }
+
 variable "github_branch" {
   description = "Name of the Github branch"
   type        = string
 }
 
+# variable "deploy_to_ecs" {
+#   type        = bool
+#   description = "Enable/disable the build stage"
+#   default     = true
+# }
+
 variable "deploy_to_ecs" {
-  type        = bool
-  description = "Enable/disable the build stage"
-  default     = true
+  type = object({
+    deployments = map(object({
+      ClusterName = string
+      ServiceName = string
+      FileName    = string
+    }))
+  })
 }
 
 variable "push_to_ecr" {
