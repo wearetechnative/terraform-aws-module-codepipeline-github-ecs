@@ -4,24 +4,19 @@ resource "aws_codebuild_project" "default" {
   concurrent_build_limit = "1"
   service_role           = aws_iam_role.codepipeline.arn
   build_timeout          = 30
-  # badge_enabled          = var.badge_enabled
-  # source_version         = var.source_version != "" ? var.source_version : null
-  # encryption_key         = var.encryption_key
 
   artifacts {
     type = "CODEPIPELINE"
   }
 
   cache {
-    type  = "S3"
+    type     = "S3"
     location = var.codepipeline-cache_s3_bucket
   }
 
   environment {
-    compute_type                = "BUILD_GENERAL1_LARGE"
-    # image                       = "aws/codebuild/standard:7.0"
-    # image = "221539347604.dkr.ecr.us-east-2.amazonaws.com/mustad/equinet_rails_dev:latest"
-    image = var.docker_run_image
+    compute_type = "BUILD_GENERAL1_LARGE"
+    image                       = var.docker_run_image
     image_pull_credentials_type = "CODEBUILD"
     type                        = "LINUX_CONTAINER"
     privileged_mode             = "true" # for deployment to docker
@@ -46,7 +41,6 @@ resource "aws_codebuild_project" "default" {
     }
 
     environment_variable {
-
       name  = "AWS_ACCOUNT_ID"
       value = data.aws_caller_identity.this_session.account_id
     }
@@ -55,13 +49,7 @@ resource "aws_codebuild_project" "default" {
   source {
     type      = "CODEPIPELINE"
     buildspec = var.buildspec
-    # location            = local.github_source_location
-    # report_build_status = "true"
     git_clone_depth = 0
-
-    # git_submodules_config {
-    #   fetch_submodules = false
-    # }
   }
 
   vpc_config {
@@ -79,23 +67,14 @@ resource "aws_codebuild_project" "default" {
   }
 }
 
-####### WOUTER
-
 resource "aws_codepipeline" "codepipeline" {
-  name     = var.pipeline_name
-  # role_arn = module.pipeline_serviceroles.role_arn
-  role_arn = aws_iam_role.codepipeline.arn
+  name          = var.pipeline_name
+  role_arn      = aws_iam_role.codepipeline.arn
   pipeline_type = var.pipeline_type
 
   artifact_store {
-    # location = data.terraform_remote_state.shared_services.outputs.s3-codepipeline_bucket #module.pipeline_serviceroles.bucket
     location = var.codepipeline_s3_bucket
     type     = "S3"
-
-    # encryption_key {
-    #   id   = "aws/s3"
-    #   type = "KMS"
-    # }
   }
 
 
@@ -112,9 +91,9 @@ resource "aws_codepipeline" "codepipeline" {
       namespace        = "SourceVariables"
 
       configuration = {
-        ConnectionArn    = var.codestar_connection_arn
-        FullRepositoryId = "${var.github_repo_owner}/${var.github_repo_name}"
-        BranchName       = var.github_branch
+        ConnectionArn        = var.codestar_connection_arn
+        FullRepositoryId     = "${var.github_repo_owner}/${var.github_repo_name}"
+        BranchName           = var.github_branch
         OutputArtifactFormat = "CODE_ZIP"
       }
     }
@@ -139,27 +118,29 @@ resource "aws_codepipeline" "codepipeline" {
     }
   }
 
- dynamic "stage" {
-  for_each = var.deploy_to_ecs != null ? keys(var.deploy_to_ecs.deployments) : []
-  content {
-    name = "Deploy-${stage.value}"
+  dynamic "stage" {
+    # Create resources for each deployment specified in var.deploy_to_ecs
+    # if var.deploy_to_ecs is not null, otherwise, no resources are created.
+    for_each = var.deploy_to_ecs != null ? keys(var.deploy_to_ecs.deployments) : []
+    content {
+      name = "Deploy-${stage.value}"
 
-    action {
-      name            = "Deploy"
-      category        = "Deploy"
-      owner           = "AWS"
-      provider        = "ECS"
-      input_artifacts = ["BuildOutput"]
-      version         = "1"
+      action {
+        name            = "Deploy"
+        category        = "Deploy"
+        owner           = "AWS"
+        provider        = "ECS"
+        input_artifacts = ["BuildOutput"]
+        version         = "1"
 
-      configuration = {
-        ClusterName = var.deploy_to_ecs.deployments[stage.value].ClusterName
-        ServiceName = var.deploy_to_ecs.deployments[stage.value].ServiceName
-        FileName    = var.deploy_to_ecs.deployments[stage.value].FileName
+        configuration = {
+          ClusterName = var.deploy_to_ecs.deployments[stage.value].ClusterName
+          ServiceName = var.deploy_to_ecs.deployments[stage.value].ServiceName
+          FileName    = var.deploy_to_ecs.deployments[stage.value].FileName
+        }
       }
     }
   }
-}
 
 
 }
