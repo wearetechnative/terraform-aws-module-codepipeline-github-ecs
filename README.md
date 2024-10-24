@@ -1,5 +1,5 @@
 
-# Terraform AWS Module CodePipeline Github ECS ![](https://img.shields.io/github/workflow/status/TechNative-B-V/terraform-aws-module-name/tflint.yaml?style=plastic)
+# Terraform AWS Module CodePipeline Github ECS ![](https://img.shields.io/github/workflow/actions/status/wearetechnative/terraform-aws-module-codepipeline-github-ecs/tflint.yaml?style=plastic)
 
 <!-- SHIELDS -->
 
