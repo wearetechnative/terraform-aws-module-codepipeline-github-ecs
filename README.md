@@ -1,5 +1,5 @@
 
-# Terraform AWS Module CodePipeline Github ECS ![](https://img.shields.io/github/actions/workflow/status/wearetechnative/terraform-aws-module-codepipeline-github-ecs/tflint.yaml?style=plastic)
+# Terraform AWS Module CodePipeline Github ECS ![](https://img.shields.io/github/actions/workflow/status/wearetechnative/terraform-aws-module-codepipeline-github-ecs/lint.yaml?branch=main&style=plastic&label=lint) ![](https://img.shields.io/github/actions/workflow/status/wearetechnative/terraform-aws-module-codepipeline-github-ecs/security-scan.yaml?branch=main&style=plastic&label=security)
 
 <!-- SHIELDS -->
 
