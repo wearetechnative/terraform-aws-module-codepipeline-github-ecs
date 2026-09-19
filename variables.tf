@@ -13,15 +13,7 @@ variable "codepipeline_s3_arn" {
   type = string
 }
 
-variable "codepipeline_s3_kms" {
-  type = string
-}
-
 variable "codepipeline-cache_s3_bucket" {
-  type = string
-}
-
-variable "codepipeline-cache_s3_arn" {
   type = string
 }
 
@@ -96,24 +88,13 @@ variable "deploy_to_ecs" {
   })
 }
 
-variable "push_to_ecr" {
-  type        = bool
-  description = "Push code to ECR"
-  default     = true
-}
-
-variable "account" {
-  type        = string
-  description = "AWS account number"
-}
-
 variable "docker_run_image" {
 }
 
 variable "pipeline_type" {
-  type=string
+  type        = string
   description = "pipeline_type, V1 or V2"
-  default = "V1"
+  default     = "V1"
 }
 
 

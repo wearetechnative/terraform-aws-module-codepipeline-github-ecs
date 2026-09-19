@@ -9,7 +9,6 @@ data "aws_region" "codepipeline" {
 }
 
 locals {
-  account_id                  = data.aws_caller_identity.this_session.account_id
   codepipeline_resources_name = "codepipeline-${var.pipeline_name}"
 }
 
@@ -23,7 +22,7 @@ data "aws_iam_policy_document" "codepipeline_role" {
 
     principals {
       type        = "Service"
-      identifiers = ["codepipeline.amazonaws.com","codebuild.amazonaws.com"]
+      identifiers = ["codepipeline.amazonaws.com", "codebuild.amazonaws.com"]
     }
 
     effect = "Allow"
@@ -114,7 +113,7 @@ data "aws_iam_policy_document" "codebuild" {
     ]
 
     resources = ["*"]
-    effect = "Allow"
+    effect    = "Allow"
   }
 }
 
