@@ -3,6 +3,7 @@ variable "pipeline_name" {
 }
 
 variable "environment" {
+  type        = string
 }
 
 variable "codepipeline_s3_bucket" {
@@ -108,6 +109,7 @@ variable "account" {
 }
 
 variable "docker_run_image" {
+  type        = string
 }
 
 variable "pipeline_type" {
